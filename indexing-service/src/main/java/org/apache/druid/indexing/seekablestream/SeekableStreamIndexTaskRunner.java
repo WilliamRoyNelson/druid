@@ -1391,6 +1391,11 @@ public abstract class SeekableStreamIndexTaskRunner<PartitionIdType, SequenceOff
     return status == Status.PAUSED;
   }
 
+  private synchronized boolean isPausable()
+  {
+    return (status == Status.READING || status == Status.PAUSED );
+  }
+
   private void requestPause()
   {
     pauseRequested = true;
@@ -1876,7 +1881,7 @@ public abstract class SeekableStreamIndexTaskRunner<PartitionIdType, SequenceOff
   @VisibleForTesting
   public Response pause() throws InterruptedException
   {
-    if (!(status == Status.PAUSED || status == Status.READING)) {
+    if (!isPausable()) {
       return Response.status(Response.Status.CONFLICT)
                      .type(MediaType.TEXT_PLAIN)
                      .entity(StringUtils.format("Can't pause, task is not in a pausable state (state: [%s])", status))
